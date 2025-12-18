@@ -370,6 +370,86 @@
 	will-change: text-shadow, background-image, transform;
 }
 
+/* Romanization Styling */
+.WithRomanization {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.WithRomanization .OriginalText {
+	display: block;
+}
+
+.WithRomanization .Romanization {
+	display: block;
+	font-size: 0.55em;
+	opacity: 0.85;
+	line-height: 1.2;
+	margin-top: -0.1em;
+}
+
+/* Ensure romanization inherits the synced styling */
+.Synced.WithRomanization .OriginalText,
+.Synced.WithRomanization .Romanization {
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	-webkit-background-clip: text;
+}
+
+.Vocals.Active .Synced.WithRomanization .OriginalText,
+.Vocals.Active .Synced.WithRomanization .Romanization {
+	background-image: inherit;
+	text-shadow: inherit;
+}
+
+/* Letter with romanization */
+.Letter.WithRomanization {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.Letter.WithRomanization .OriginalText,
+.Letter.WithRomanization .Romanization {
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	-webkit-background-clip: text;
+}
+
+.Vocals.Active .Letter.WithRomanization .OriginalText,
+.Vocals.Active .Letter.WithRomanization .Romanization {
+	background-image: inherit;
+	text-shadow: inherit;
+}
+
+/* Static lyrics with romanization */
+.Static.WithRomanization .OriginalText,
+.Static.WithRomanization .Romanization {
+	background-color: rgb(255, 255, 255);
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	-webkit-background-clip: text;
+}
+
+/* Line lyrics with romanization - scale transform origin */
+.Line.WithRomanization {
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.NaturallyAlignedRight .Line.WithRomanization {
+	align-items: flex-end;
+}
+
+.NaturallyAlignedLeft .VocalsGroup.AlignedOpposite .Line.WithRomanization {
+	align-items: flex-end;
+}
+
+.NaturallyAlignedRight .VocalsGroup.AlignedOpposite .Line.WithRomanization {
+	align-items: flex-start;
+}
+
 /* Spotify */
 .main-nowPlayingView-lyricsContent {
 	// Make the lyrics containers their own container

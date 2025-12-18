@@ -50,6 +50,12 @@ const RomajiPromise = RomajiConverter.init(KuromojiAnalyzer)
 const KoreanTextTest = /[\uac00-\ud7af]|[\u1100-\u11ff]|[\u3130-\u318f]|[\ua960-\ua97f]|[\ud7b0-\ud7ff]/
 const ChineseTextText = /([\u4E00-\u9FFF])/
 const JapaneseTextText = /([ぁ-んァ-ン])/
+const LatinTextPattern = /^[A-Za-z0-9\s\u00C0-\u024F\u1E00-\u1EFF.,!?'"()-]+$/
+
+// Helper to detect if text should skip romanization display
+export const ShouldSkipRomanization = (text: string): boolean => {
+	return LatinTextPattern.test(text)
+}
 
 // Helper Methods
 const GetNaturalAlignment = (language: string): NaturalAlignment => {

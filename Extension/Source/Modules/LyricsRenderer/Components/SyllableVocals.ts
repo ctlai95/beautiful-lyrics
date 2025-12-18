@@ -8,6 +8,7 @@ import Spring from '@Universal/Modules/LegacySpring.ts'
 
 // Modules
 import { GetSpline, Clamp } from '../SharedMethods.ts';
+import { ShouldSkipRomanization } from '@Spices/Spicetify/Services/Player/LyricUtilities.ts';
 
 // Imported Types
 import { LiveText, LyricState, SyncedVocals } from '../Types.d.ts'
@@ -232,12 +233,16 @@ export default class SyllableVocals implements SyncedVocals, Giveable {
 					}
 				}
 
+				// Check if we should show romanization below the original text
+				// Skip romanization if the original text is already Latin-based (e.g., English lines in a Chinese song)
+				const showRomanization = isRomanized && syllableMetadata.RomanizedText && !ShouldSkipRomanization(syllableMetadata.Text)
+
 				// Determine whether or not our content is a set of letters or a single text
 				let letters: (AnimatedLetter[] | undefined)
 				if (isEmphasized) {
 					// Store all our "letters"
 					const letterTexts: string[] = []
-					for (const letter of (isRomanized && syllableMetadata.RomanizedText || syllableMetadata.Text)) {
+					for (const letter of syllableMetadata.Text) {
 						letterTexts.push(letter)
 					}
 
@@ -247,34 +252,99 @@ export default class SyllableVocals implements SyncedVocals, Giveable {
 					// Now generate our letters
 					letters = []
 					let relativeTimestamp = 0
-					for (const letter of letterTexts) {
-						// Create our letter-span
-						const letterSpan = this.Maid.Give(document.createElement('span'))
-						letterSpan.classList.add('Letter')
-						letterSpan.classList.add('Synced')
-						letterSpan.innerText = letter
-						syllableSpan.appendChild(letterSpan)
 
-						// Now store our letter
-						letters.push(
-							{
-								Start: relativeTimestamp,
-								Duration: relativeTimestep,
-								GlowDuration: (1 - relativeTimestamp),
+					if (showRomanization) {
+						// Split romanization by spaces/hyphens to get individual pinyin syllables
+						// Each pinyin syllable typically corresponds to one CJK character
+						const romanizedParts = syllableMetadata.RomanizedText!.split(/[\s-]+/).filter(p => p.length > 0)
 
-								LiveText: {
-									Object: letterSpan,
-									Springs: CreateSprings()
+						for (let i = 0; i < letterTexts.length; i++) {
+							const letter = letterTexts[i]
+
+							// Create our letter-span container
+							const letterSpan = this.Maid.Give(document.createElement('span'))
+							letterSpan.classList.add('Letter')
+							letterSpan.classList.add('Synced')
+							letterSpan.classList.add('WithRomanization')
+
+							// Create original letter span
+							const originalSpan = this.Maid.Give(document.createElement('span'))
+							originalSpan.classList.add('OriginalText')
+							originalSpan.innerText = letter
+							letterSpan.appendChild(originalSpan)
+
+							// Create romanization span - get corresponding pinyin syllable
+							const romanizationSpan = this.Maid.Give(document.createElement('span'))
+							romanizationSpan.classList.add('Romanization')
+							// Map each original character to its corresponding romanized part
+							romanizationSpan.innerText = romanizedParts[i] ?? ''
+							letterSpan.appendChild(romanizationSpan)
+
+							syllableSpan.appendChild(letterSpan)
+
+							// Now store our letter
+							letters.push(
+								{
+									Start: relativeTimestamp,
+									Duration: relativeTimestep,
+									GlowDuration: (1 - relativeTimestamp),
+
+									LiveText: {
+										Object: letterSpan,
+										Springs: CreateSprings()
+									}
 								}
-							}
-						)
+							)
 
-						// Now update our relative-timestamp for the next letter
-						relativeTimestamp += relativeTimestep
+							// Now update our relative-timestamp for the next letter
+							relativeTimestamp += relativeTimestep
+						}
+					} else {
+						for (const letter of letterTexts) {
+							// Create our letter-span
+							const letterSpan = this.Maid.Give(document.createElement('span'))
+							letterSpan.classList.add('Letter')
+							letterSpan.classList.add('Synced')
+							letterSpan.innerText = letter
+							syllableSpan.appendChild(letterSpan)
+
+							// Now store our letter
+							letters.push(
+								{
+									Start: relativeTimestamp,
+									Duration: relativeTimestep,
+									GlowDuration: (1 - relativeTimestamp),
+
+									LiveText: {
+										Object: letterSpan,
+										Springs: CreateSprings()
+									}
+								}
+							)
+
+							// Now update our relative-timestamp for the next letter
+							relativeTimestamp += relativeTimestep
+						}
 					}
 				} else {
-					// Update our text
-					syllableSpan.innerText = (isRomanized && syllableMetadata.RomanizedText || syllableMetadata.Text)
+					// Non-emphasized syllable
+					if (showRomanization) {
+						syllableSpan.classList.add('WithRomanization')
+
+						// Create original text span
+						const originalSpan = this.Maid.Give(document.createElement('span'))
+						originalSpan.classList.add('OriginalText')
+						originalSpan.innerText = syllableMetadata.Text
+						syllableSpan.appendChild(originalSpan)
+
+						// Create romanization span below
+						const romanizationSpan = this.Maid.Give(document.createElement('span'))
+						romanizationSpan.classList.add('Romanization')
+						romanizationSpan.innerText = syllableMetadata.RomanizedText!
+						syllableSpan.appendChild(romanizationSpan)
+					} else {
+						syllableSpan.innerText = syllableMetadata.Text
+					}
 				}
 
 				// Determine our time information

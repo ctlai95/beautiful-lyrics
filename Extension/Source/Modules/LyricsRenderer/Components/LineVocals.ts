@@ -5,6 +5,7 @@ import Spring from "@Universal/Modules/LegacySpring.ts"
 
 // Modules
 import { GetSpline, Clamp } from "../SharedMethods.ts"
+import { ShouldSkipRomanization } from "@Spices/Spicetify/Services/Player/LyricUtilities.ts"
 
 // Imported Types
 import { SyncedVocals, LyricState } from "../Types.d.ts"
@@ -83,7 +84,28 @@ export default class LineVocals implements SyncedVocals, Giveable {
 		syllableSpan.classList.add('Lyric')
 		syllableSpan.classList.add('Synced')
 		syllableSpan.classList.add('Line')
-		syllableSpan.innerText = (isRomanized && lineMetadata.RomanizedText || lineMetadata.Text)
+
+		// Check if we should show romanization below the original text
+		// Skip romanization if the original text is already Latin-based (e.g., English lines in a Chinese song)
+		const showRomanization = isRomanized && lineMetadata.RomanizedText && !ShouldSkipRomanization(lineMetadata.Text)
+		if (showRomanization) {
+			syllableSpan.classList.add('WithRomanization')
+
+			// Create original text span
+			const originalSpan = this.Maid.Give(document.createElement('span'))
+			originalSpan.classList.add('OriginalText')
+			originalSpan.innerText = lineMetadata.Text
+			syllableSpan.appendChild(originalSpan)
+
+			// Create romanization span below
+			const romanizationSpan = this.Maid.Give(document.createElement('span'))
+			romanizationSpan.classList.add('Romanization')
+			romanizationSpan.innerText = lineMetadata.RomanizedText!
+			syllableSpan.appendChild(romanizationSpan)
+		} else {
+			syllableSpan.innerText = lineMetadata.Text
+		}
+
 		container.appendChild(syllableSpan)
 
 		// Now create our live-text element
